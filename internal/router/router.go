@@ -16,6 +16,7 @@ func Setup(
 	activityH *handler.ActivityHandler,
 	inspectionH *handler.InspectionHandler,
 	traceCodeH *handler.TraceCodeHandler,
+	deviceH *handler.DeviceHandler,
 	healthH *handler.HealthHandler,
 	rdb *redis.Client,
 ) *gin.Engine {
@@ -48,6 +49,15 @@ func Setup(
 
 		// Inspections
 		v1.POST("/batches/:id/inspection", inspectionH.Create)
+
+		// Collection devices: registry + sync progress reconciliation
+		v1.POST("/devices", deviceH.Register)
+		v1.GET("/devices", deviceH.List)
+		v1.GET("/devices/:id", deviceH.GetByID)
+		v1.PUT("/devices/:id", deviceH.Update)
+		v1.POST("/devices/:id/sync", deviceH.Sync)
+		v1.GET("/devices/:id/sync-status", deviceH.SyncStatus)
+		v1.GET("/devices/:id/reconcile", deviceH.Reconcile)
 
 		// Trace codes
 		v1.POST("/batches/:id/codes", traceCodeH.Generate)

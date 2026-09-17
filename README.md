@@ -38,6 +38,15 @@ POST /api/v1/batches/{id}/inspection        上传检测结果
 POST /api/v1/batches/{id}/codes             生成溯源码（返回数量与短码列表）
 GET  /api/v1/trace/{code}                   公开溯源查询（无需鉴权，限流）
 GET  /api/v1/trace/{code}/qrcode            返回二维码 PNG（带缓存头）
+
+# 采集设备登记与上报进度核对
+POST /api/v1/devices                        设备登记（device_code 幂等：重装重新登记返回原设备与进度）
+GET  /api/v1/devices?plot_id=&status=       设备列表（含地块/农场信息）
+GET  /api/v1/devices/{id}                   设备详情
+PUT  /api/v1/devices/{id}                   变更登记（换地块/换人经手/停用，不影响上报进度）
+POST /api/v1/devices/{id}/sync              批量同步（每条带设备本地 seq + client_uuid，逐条回执，断点续传）
+GET  /api/v1/devices/{id}/sync-status       续传检查点（next_seq / 最大连续序号 / 缺口列表）
+GET  /api/v1/devices/{id}/reconcile?max_seq=N  对账：设备自称传到 N，服务端逐条列出缺失序号
 ```
 
 ## 7. 数据模型
@@ -50,6 +59,9 @@ activity(id, batch_id, client_uuid UNIQUE, kind /* fertilize|pesticide|irrigatio
 input_material(id, name, type, registration_no, safe_interval_days, active_ingredient)
 inspection(id, batch_id, lab, sampled_at, result /* pass|fail */, report_url, items jsonb)
 trace_code(id, batch_id, code UNIQUE, seq, printed_at, first_scanned_at, first_scan_region)
+device(id, device_code UNIQUE, plot_id, operator, status /* active|disabled */, created_at, updated_at)
+device_upload(id, device_id, seq, client_uuid, activity_id, status /* accepted|rejected */, reason, received_at)
+  -- 设备上报账本：UNIQUE(device_id, seq) + UNIQUE(client_uuid)，续传与对账的依据
 ```
 
 ## 8. 关键实现点
