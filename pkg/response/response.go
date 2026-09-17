@@ -50,3 +50,7 @@ func InternalError(c *gin.Context, message string) {
 func Forbidden(c *gin.Context, message string) {
 	Error(c, http.StatusForbidden, message)
 }
+
+func Conflict(c *gin.Context, message string) {
+	Error(c, http.StatusConflict, message)
+}

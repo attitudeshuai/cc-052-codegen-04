@@ -16,6 +16,7 @@ func Setup(
 	activityH *handler.ActivityHandler,
 	inspectionH *handler.InspectionHandler,
 	traceCodeH *handler.TraceCodeHandler,
+	deviceH *handler.DeviceHandler,
 	healthH *handler.HealthHandler,
 	rdb *redis.Client,
 ) *gin.Engine {
@@ -51,6 +52,16 @@ func Setup(
 
 		// Trace codes
 		v1.POST("/batches/:id/codes", traceCodeH.Generate)
+
+		// 采集设备登记、交接、上报同步与进度核对
+		v1.POST("/devices", deviceH.Register)
+		v1.GET("/devices", deviceH.List)
+		v1.GET("/devices/:id", deviceH.Get)
+		v1.POST("/devices/:id/handover", deviceH.Handover)
+		v1.GET("/devices/:id/handovers", deviceH.Handovers)
+		v1.GET("/devices/:id/progress", deviceH.Progress)
+		v1.GET("/devices/:id/records", deviceH.Records)
+		v1.POST("/device-sync/:serial", deviceH.Sync)
 	}
 
 	// Public trace endpoints with rate limiting
